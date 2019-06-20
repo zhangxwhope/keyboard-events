@@ -4,23 +4,25 @@
       <el-form-item label="姓名:">
         <el-input v-model="form.name"
                   focus-index="0"
+                  class="focus-element"
+                  :autofocus="firstFocus"
                   v-focus="focusIndex === 0"></el-input>
       </el-form-item>
       <el-form-item label="性别:">
          <el-radio-group v-model="form.sex">
-          <el-radio :label="1" v-focus="focusIndex === 1" focus-index="1">男</el-radio>
+          <el-radio :label="1" v-focus="focusIndex === 1" focus-index="1" class="focus-element">男</el-radio>
           <el-radio :label="2">女</el-radio>
         </el-radio-group>
       </el-form-item>
       <el-form-item label="爱好:">
         <el-checkbox-group v-model="form.interest">
-          <el-checkbox label="足球" v-focus="focusIndex === 2" focus-index="2"></el-checkbox>
+          <el-checkbox label="足球" v-focus="focusIndex === 2" focus-index="2" class="focus-element"></el-checkbox>
           <el-checkbox label="篮球"></el-checkbox>
           <el-checkbox label="羽毛球"></el-checkbox>
         </el-checkbox-group>
       </el-form-item>
       <el-form-item label="运动频率:">
-        <el-select v-model="form.frequency" placeholder="请选择" v-focus="focusIndex === 3" focus-index="3">
+        <el-select ref="selectEle" v-model="form.frequency" placeholder="请选择" focus-index="3" class="focus-element">
           <el-option
             v-for="item in options"
             :key="item.value"
@@ -30,7 +32,7 @@
         </el-select>
       </el-form-item>
       <el-form-item label="其他信息:">
-        <el-button type="primary" v-focus="focusIndex === 4" focus-index="4">其他信息填写</el-button>
+        <el-button :autofocus="buttonFocus" focus-index="4" class="focus-element" :class="{ 'focusing' : buttonFocus }">其他信息填写</el-button>
       </el-form-item>
     </el-form>
   </div>
@@ -81,7 +83,24 @@ export default {
           label: '每天',
           value: 7
         }
-      ]
+      ],
+      firstFocus: true, // 第一个聚焦
+      buttonFocus: false // 提交按钮聚焦
+    }
+  },
+  watch: {
+    'focusIndex' (val) {
+      switch (val) {
+        case 3:
+          this.$refs.selectEle.focus()
+          break
+        case 4:
+          this.buttonFocus = true
+          this.$refs.selectEle.blur()
+          break
+        default:
+          break
+      }
     }
   },
   created () {
@@ -89,25 +108,51 @@ export default {
   },
   methods: {
     nextFocus (index) {
-      console.log(index, 'index')
-      this.focusIndex = index + 1
+      this.focusIndex = Number(index) + 1
     },
     bindEvent (_this) {
       document.onkeydown = function (e) {
-        // var ev = e || window.event
+        let ev = e || window.event
+        let keyCode = ev.keyCode
         console.log(document.activeElement, 'element')
-        _this.findCurrentFocusIndex(document.activeElement)
+        console.log(keyCode, 'keyCode')
+        _this.findCurrentFocusIndex(document.activeElement, keyCode)
       }
     },
     // 找到对应的focus-index
-    findCurrentFocusIndex (element) {
-      let index = element.getAttribute('focus-index')
-      if (!index) {
+    findCurrentFocusIndex (element, keyCode) {
+      let isDoc = element === document
+      let index = !isDoc ? element.getAttribute('focus-index') : -1
+      // let first = document.querySelectorAll('.el-input__inner')[0]
+      if (index === null) {
         element = element.parentNode
-        this.findCurrentFocusIndex(element)
+        this.findCurrentFocusIndex(element, keyCode)
       } else {
-        this.focusIndex = Number(index) + 1
+        // isDoc && first.focus() // 当前是document则返回第一个
+        isDoc && this.submit()
+        switch (keyCode) {
+          case 13: // enter回车
+            this.nextFocus(index) // 聚焦下一个
+            break
+          case 38: // PgUp向上
+            break
+          case 40: // PgDn向下
+            break
+          case 37: // Home向左
+            break
+          case 39: // End向右
+            break
+          default:
+            break
+        }
       }
+    },
+    // 提交事件
+    submit () {
+      this.$message({
+        type: 'info',
+        message: '提交成功'
+      })
     }
   }
 }
@@ -115,4 +160,14 @@ export default {
 
 <style lang="scss" scoped>
 @import './index.scss'
+</style>
+<style lang="scss">
+.el-button{
+  &.focusing{
+    // box-shadow: 0 0 2px 0 #409EFF;
+    color: #409EFF;
+    border-color: #c6e2ff;
+    background-color: #ecf5ff;
+  }
+}
 </style>
