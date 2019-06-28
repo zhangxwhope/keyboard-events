@@ -13,7 +13,7 @@
           <el-radio v-for="(item, key) in dict['sex']"
                     :key="key"
                     :label="item.value"
-                    v-focus="focusIndex === 1"
+                    v-focus="key === 0 && focusIndex === 1"
                     focus-index="1"
                     selected-prop="sex"
                     class="focus-element">{{ item.label }}</el-radio>
@@ -153,9 +153,15 @@ export default {
       this.focusIndex++
     },
     // 水平方向移动
-    moveHorizontal () {
+    moveHorizontal (e, direct) {
+      console.log(e, 'event')
+      let target = e.target
+      let isLeft = direct === -1 // 向左
+      let next = isLeft ? target.previousSibling : target.nextSibling
+      console.log(next, 'next')
       switch (this.typeDict[this.focusIndex]) {
         case 'radio':
+          next.focus()
           break
         case 'checkbox':
           break
@@ -199,7 +205,7 @@ export default {
             _this.moveHorizontal() // 水平方向移动
             break
           case 39: // End向右
-            _this.moveHorizontal() // 水平方向移动
+            _this.moveHorizontal(ev) // 水平方向移动
             break
           default:
             break
