@@ -14,7 +14,7 @@
                     class="focus-element">{{ item.label }}</el-radio>
         </el-radio-group>
       </el-form-item>
-      <el-form-item label="爱好:">
+      <el-form-item label="爱好:" class="focus-item-wrap" data-type="checkbox">
         <el-checkbox-group v-model="form.interest">
           <el-checkbox v-for="(item, key) in dict['interest']"
                        :key="key"
@@ -22,7 +22,7 @@
                        class="focus-element">{{ item.label }}</el-checkbox>
         </el-checkbox-group>
       </el-form-item>
-      <el-form-item label="运动频率:">
+      <el-form-item label="运动频率:" class="focus-item-wrap" data-type="select">
         <el-select ref="selectEle" v-model="form.frequency" placeholder="请选择" class="focus-element">
           <el-option v-for="item in dict['frequency']"
                     :key="item.value"
@@ -31,7 +31,7 @@
           </el-option>
         </el-select>
       </el-form-item>
-      <el-form-item label="其他信息:">
+      <el-form-item label="其他信息:" class="focus-item-wrap" data-type="button">
         <el-button :autofocus="buttonFocus"
                    class="focus-element"
                    :class="{ 'focusing' : buttonFocus }">其他信息填写</el-button>
@@ -142,12 +142,9 @@ export default {
   methods: {
     // 当前失焦，聚焦到下一个
     nextFocus (target) {
-      console.log(target, 'target')
       let current = this.findCurrent(target) // 找到当前表单类型
-      let next = current.nextElementSibling
-      console.log(next, 'next after')
-      let nextFocus = this.findNextFocus(next) // 找到下一表单类型中的聚焦元素
-      console.log(nextFocus, 'nextFocus')
+      let next = current ? current.nextElementSibling : null
+      let nextFocus = next ? this.findNextFocus(next) : null // 找到下一表单类型中的聚焦元素
       target.blur()
       nextFocus && nextFocus.focus()
     },
@@ -156,39 +153,37 @@ export default {
       if (current && current.className && current.className.includes('focus-item-wrap')) {
         return current
       }
-      current = current.parentNode
-      return this.findCurrent(current)
+      current = current ? current.parentNode : null
+      return current ? this.findCurrent(current) : current
     },
     // 递归找到下一表单类型中的聚焦元素
     findNextFocus (next) {
-      console.log(next, 'next enter')
       if (next && next.className && next.className.includes('focus-element')) {
         return next
       }
 
+      let child = null
       let findChildren = (children) => {
-        let child = null
         if (children && children.length > 0) {
           for (let i = 0; i < children.length; i++) {
-            if (children[i].className.includes('focus-element')) {
-              child = children[i]
+            let current = children[i]
+            if (current.className.includes('focus-element')) {
+              child = current
               break
             }
+            findChildren(current.children)
           }
         }
         return child
       }
       next = next ? findChildren(next.children) : null
-      console.log(next, 'next children')
       return next ? this.findNextFocus(next) : next
     },
     // 水平方向移动
     moveHorizontal (e, direct) {
-      console.log(e, 'event')
       let target = e.target
       let isLeft = direct === -1 // 向左
       let next = isLeft ? target.previousSibling : target.nextSibling
-      console.log(next, 'next')
       switch (this.typeDict[this.focusIndex]) {
         case 'radio':
           next.focus()
@@ -215,11 +210,8 @@ export default {
     bindEvent (_this) {
       document.onkeydown = function (e) {
         let ev = e || window.event
-        console.log(ev, 'event')
         let keyCode = ev.keyCode
         let target = ev.target
-        console.log(document.activeElement, 'element')
-        // console.log(keyCode, 'keyCode')
         // _this.findCurrentFocusIndex(document.activeElement, keyCode)
         switch (keyCode) {
           case 13: // enter回车
