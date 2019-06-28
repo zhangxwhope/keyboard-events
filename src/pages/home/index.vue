@@ -1,21 +1,16 @@
 <template>
   <div class="mod-home">
     <el-form ref="form" :model="form" :inline="true" label-width="80px">
-      <el-form-item label="姓名:">
+      <el-form-item label="姓名:" class="focus-item-wrap" data-type="input">
         <el-input v-model="form.name"
-                  focus-index="0"
                   class="focus-element"
-                  :autofocus="firstFocus"
-                  v-focus="focusIndex === 0"></el-input>
+                  :autofocus="firstFocus"></el-input>
       </el-form-item>
-      <el-form-item label="性别:">
+      <el-form-item label="性别:" class="focus-item-wrap" data-type="radio">
          <el-radio-group v-model="form.sex">
           <el-radio v-for="(item, key) in dict['sex']"
                     :key="key"
                     :label="item.value"
-                    v-focus="key === 0 && focusIndex === 1"
-                    focus-index="1"
-                    selected-prop="sex"
                     class="focus-element">{{ item.label }}</el-radio>
         </el-radio-group>
       </el-form-item>
@@ -24,13 +19,11 @@
           <el-checkbox v-for="(item, key) in dict['interest']"
                        :key="key"
                        :label="item.value"
-                       v-focus="focusIndex === 2"
-                       focus-index="2"
                        class="focus-element">{{ item.label }}</el-checkbox>
         </el-checkbox-group>
       </el-form-item>
       <el-form-item label="运动频率:">
-        <el-select ref="selectEle" v-model="form.frequency" placeholder="请选择" focus-index="3" class="focus-element">
+        <el-select ref="selectEle" v-model="form.frequency" placeholder="请选择" class="focus-element">
           <el-option v-for="item in dict['frequency']"
                     :key="item.value"
                     :label="item.label"
@@ -40,7 +33,6 @@
       </el-form-item>
       <el-form-item label="其他信息:">
         <el-button :autofocus="buttonFocus"
-                   focus-index="4"
                    class="focus-element"
                    :class="{ 'focusing' : buttonFocus }">其他信息填写</el-button>
       </el-form-item>
@@ -148,9 +140,47 @@ export default {
     this.bindEvent(this)
   },
   methods: {
-    // 聚焦到下一个
-    nextFocus () {
-      this.focusIndex++
+    // 当前失焦，聚焦到下一个
+    nextFocus (target) {
+      console.log(target, 'target')
+      let current = this.findCurrent(target) // 找到当前表单类型
+      let next = current.nextElementSibling
+      console.log(next, 'next after')
+      let nextFocus = this.findNextFocus(next) // 找到下一表单类型中的聚焦元素
+      console.log(nextFocus, 'nextFocus')
+      target.blur()
+      nextFocus && nextFocus.focus()
+    },
+    // 递归查找当前表单类型
+    findCurrent (current) {
+      if (current && current.className && current.className.includes('focus-item-wrap')) {
+        return current
+      }
+      current = current.parentNode
+      return this.findCurrent(current)
+    },
+    // 递归找到下一表单类型中的聚焦元素
+    findNextFocus (next) {
+      console.log(next, 'next enter')
+      if (next && next.className && next.className.includes('focus-element')) {
+        return next
+      }
+
+      let findChildren = (children) => {
+        let child = null
+        if (children && children.length > 0) {
+          for (let i = 0; i < children.length; i++) {
+            if (children[i].className.includes('focus-element')) {
+              child = children[i]
+              break
+            }
+          }
+        }
+        return child
+      }
+      next = next ? findChildren(next.children) : null
+      console.log(next, 'next children')
+      return next ? this.findNextFocus(next) : next
     },
     // 水平方向移动
     moveHorizontal (e, direct) {
@@ -185,7 +215,9 @@ export default {
     bindEvent (_this) {
       document.onkeydown = function (e) {
         let ev = e || window.event
+        console.log(ev, 'event')
         let keyCode = ev.keyCode
+        let target = ev.target
         console.log(document.activeElement, 'element')
         // console.log(keyCode, 'keyCode')
         // _this.findCurrentFocusIndex(document.activeElement, keyCode)
@@ -193,7 +225,7 @@ export default {
           case 13: // enter回车
             // isDoc && this.submit()
             _this.confirmCurrent() // 确认当前聚焦的值
-            _this.nextFocus() // 聚焦下一个
+            _this.nextFocus(target) // 聚焦下一个
             break
           case 38: // PgUp向上
             _this.moveVertical() // 垂直方向移动
