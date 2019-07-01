@@ -23,7 +23,7 @@
         </el-checkbox-group>
       </el-form-item>
       <el-form-item label="运动频率:" class="focus-item-wrap" data-type="select">
-        <el-select ref="selectEle" v-model="form.frequency" placeholder="请选择" class="focus-element">
+        <el-select ref="selectEle" id="selectEle" v-model="form.frequency" placeholder="请选择" class="focus-element">
           <el-option v-for="item in dict['frequency']"
                     :key="item.value"
                     :label="item.label"
@@ -145,8 +145,19 @@ export default {
       let current = this.findCurrent(target) // 找到当前表单类型
       let next = current ? current.nextElementSibling : null
       let nextFocus = next ? this.findNextFocus(next) : null // 找到下一表单类型中的聚焦元素
-      target.blur()
-      nextFocus && nextFocus.focus()
+      console.log(nextFocus, 'nextFocus')
+      console.log(target, 'target')
+      if (target.getAttribute('id') === 'selectEle') {
+        this.$refs.selectEle.blur()
+      } else {
+        target.blur()
+      }
+
+      if (nextFocus && nextFocus.className.includes('el-select')) {
+        this.$refs.selectEle.focus()
+      } else {
+        nextFocus && nextFocus.focus()
+      }
     },
     // 递归查找当前表单类型
     findCurrent (current) {
