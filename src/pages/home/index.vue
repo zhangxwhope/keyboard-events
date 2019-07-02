@@ -121,38 +121,20 @@ export default {
       typeDict: ['input', 'raido', 'checkbox', 'select', 'button'] // 表单组件类型
     }
   },
-  watch: {
-    'focusIndex' (val) {
-      switch (val) {
-        case 3:
-          this.$refs.selectEle.focus()
-          break
-        case 4:
-          this.buttonFocus = true
-          this.$refs.selectEle.blur()
-          break
-        default:
-          break
-      }
-    }
-  },
   created () {
     this.bindEvent(this)
   },
   methods: {
     // 当前失焦，聚焦到下一个
     nextFocus (target) {
-      let current = this.findCurrent(target) // 找到当前表单类型
+      let current = this.findCurrent(target, 'focus-item-wrap') // 找到当前表单类型
       let next = current ? current.nextElementSibling : null
       let nextFocus = next ? this.findNextFocus(next) : null // 找到下一表单类型中的聚焦元素
-      console.log(nextFocus, 'nextFocus')
-      console.log(target, 'target')
       if (target.getAttribute('id') === 'selectEle') {
         this.$refs.selectEle.blur()
       } else {
         target.blur()
       }
-
       if (nextFocus && nextFocus.className.includes('el-select')) {
         this.$refs.selectEle.focus()
       } else {
@@ -160,12 +142,12 @@ export default {
       }
     },
     // 递归查找当前表单类型
-    findCurrent (current) {
-      if (current && current.className && current.className.includes('focus-item-wrap')) {
+    findCurrent (current, type) {
+      if (current && current.className && current.className.includes(`${type}`)) {
         return current
       }
       current = current ? current.parentNode : null
-      return current ? this.findCurrent(current) : current
+      return current ? this.findCurrent(current, type) : current
     },
     // 递归找到下一表单类型中的聚焦元素
     findNextFocus (next) {
@@ -190,24 +172,25 @@ export default {
       next = next ? findChildren(next.children) : null
       return next ? this.findNextFocus(next) : next
     },
-    // 水平方向移动
-    moveHorizontal (e, direct) {
-      let target = e.target
-      let isLeft = direct === -1 // 向左
-      let next = isLeft ? target.previousSibling : target.nextSibling
-      switch (this.typeDict[this.focusIndex]) {
-        case 'radio':
-          next.focus()
-          break
-        case 'checkbox':
-          break
-        case 'select':
-          break
-        case 'button':
-          break
-        default:
-          break
+    // 找到前一个或者后一个兄弟聚焦元素
+    findSiblingFocus (current) {
+      let nextSibling = current.nextElementSibling
+      if (nextSibling && nextSibling.className && nextSibling.className.includes('focus-element')) {
+        return nextSibling
       }
+      nextSibling = nextSibling ? nextSibling.nextElementSibling : null
+      return nextSibling ? this.findSiblingFocus(nextSibling) : nextSibling
+    },
+    // 水平方向移动
+    moveHorizontal (target, direct) {
+      let isLeft = direct === -1 // 向左
+      // let next = isLeft ? target.previousSibling : target.nextSibling
+      console.log(isLeft, 'isLeft')
+      let current = this.findCurrent(target, 'focus-element') // 找到当前表单类型
+      console.log(current, 'current')
+      let nextFocus = this.findSiblingFocus(current) // 找到下一表单类型中的聚焦元素
+      console.log(nextFocus, 'nextFocus')
+      nextFocus && nextFocus.focus()
     },
     // 垂直方向移动
     moveVertical () {
@@ -223,10 +206,8 @@ export default {
         let ev = e || window.event
         let keyCode = ev.keyCode
         let target = ev.target
-        // _this.findCurrentFocusIndex(document.activeElement, keyCode)
         switch (keyCode) {
           case 13: // enter回车
-            // isDoc && this.submit()
             _this.confirmCurrent() // 确认当前聚焦的值
             _this.nextFocus(target) // 聚焦下一个
             break
@@ -237,43 +218,10 @@ export default {
             _this.moveVertical() // 垂直方向移动
             break
           case 37: // Home向左
-            _this.moveHorizontal() // 水平方向移动
+            _this.moveHorizontal(target, -1) // 水平方向移动
             break
           case 39: // End向右
-            _this.moveHorizontal(ev) // 水平方向移动
-            break
-          default:
-            break
-        }
-      }
-    },
-    // 找到对应的focus-index
-    findCurrentFocusIndex (element, keyCode) {
-      let isDoc = element === document
-      let index = !isDoc ? element.getAttribute('focus-index') : -1
-      // let first = document.querySelectorAll('.el-input__inner')[0]
-      if (index === null) {
-        element = element.parentNode
-        this.findCurrentFocusIndex(element, keyCode)
-      } else {
-        // isDoc && first.focus() // 当前是document则返回第一个
-        switch (keyCode) {
-          case 13: // enter回车
-            isDoc && this.submit()
-            this.confirmCurrent() // 确认当前聚焦的值
-            this.nextFocus(index) // 聚焦下一个
-            break
-          case 38: // PgUp向上
-            this.moveVertical() // 垂直方向移动
-            break
-          case 40: // PgDn向下
-            this.moveVertical() // 垂直方向移动
-            break
-          case 37: // Home向左
-            this.moveHorizontal(element, index) // 水平方向移动
-            break
-          case 39: // End向右
-            this.moveHorizontal(element, index) // 水平方向移动
+            _this.moveHorizontal(target, 1) // 水平方向移动
             break
           default:
             break
