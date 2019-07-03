@@ -173,13 +173,13 @@ export default {
       return next ? this.findNextFocus(next) : next
     },
     // 找到前一个或者后一个兄弟聚焦元素
-    findSiblingFocus (current) {
-      let nextSibling = current.nextElementSibling
+    findSiblingFocus (current, isLeft) {
+      let nextSibling = isLeft ? current.previousElementSibling : current.nextElementSibling
       if (nextSibling && nextSibling.className && nextSibling.className.includes('focus-element')) {
         return nextSibling
       }
-      nextSibling = nextSibling ? nextSibling.nextElementSibling : null
-      return nextSibling ? this.findSiblingFocus(nextSibling) : nextSibling
+      nextSibling = nextSibling ? (isLeft ? nextSibling.previousElementSibling : nextSibling.nextElementSibling) : null
+      return nextSibling ? this.findSiblingFocus(nextSibling, isLeft) : nextSibling
     },
     // 水平方向移动
     moveHorizontal (target, direct) {
@@ -188,7 +188,7 @@ export default {
       console.log(isLeft, 'isLeft')
       let current = this.findCurrent(target, 'focus-element') // 找到当前表单类型
       console.log(current, 'current')
-      let nextFocus = this.findSiblingFocus(current) // 找到下一表单类型中的聚焦元素
+      let nextFocus = this.findSiblingFocus(current, isLeft) // 找到下一表单类型中的聚焦元素
       console.log(nextFocus, 'nextFocus')
       nextFocus && nextFocus.focus()
     },
