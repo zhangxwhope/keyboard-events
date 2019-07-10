@@ -129,18 +129,21 @@ export default {
     nextFocus (target, isCheckbox) {
       // 如果是复选框，则找到是否是最后一个
       let isLast, _current
+      let hasChecked = this.form.interest.includes(Number(target.value))
       if (isCheckbox) {
         _current = this.findCurrent(target, 'focus-element')
         let children = _current.parentNode.children
         isLast = [].indexOf.call(children, _current) === children.length - 1
       }
-      let current = (isCheckbox && !isLast) ? _current : this.findCurrent(target, 'focus-item-wrap') // 找到当前表单类型
+      let current = (isCheckbox && !isLast && !hasChecked) ? _current : this.findCurrent(target, 'focus-item-wrap') // 找到当前表单类型
       let next = current ? current.nextElementSibling : null
       let nextFocus = next ? this.findNextFocus(next) : null // 找到下一表单类型中的聚焦元素
 
       if (isCheckbox) {
         this.confirmCurrent(target)
-        isLast && this.confirmFocus(target, nextFocus)
+        if (isLast || hasChecked) {
+          this.confirmFocus(target, nextFocus)
+        }
       } else {
         this.confirmFocus(target, nextFocus)
       }
@@ -202,9 +205,7 @@ export default {
     moveHorizontal (target, direct) {
       let isLeft = direct === -1 // 向左
       let current = this.findCurrent(target, 'focus-element') // 找到当前表单类型
-      console.log(current, 'current')
       let nextFocus = this.findSiblingFocus(current, isLeft) // 找到下一表单类型中的聚焦元素
-      console.log(nextFocus, 'nextFocus')
       nextFocus && nextFocus.focus()
     },
     // 垂直方向移动
@@ -214,7 +215,6 @@ export default {
     },
     // 确认当前聚焦的表单的值
     confirmCurrent (target) {
-      console.log(target.value, 'target value')
       this.form.interest.push(Number(target.value))
     },
     // 绑定键盘事件
