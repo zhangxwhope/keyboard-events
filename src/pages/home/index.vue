@@ -125,11 +125,28 @@ export default {
     this.bindEvent(this)
   },
   methods: {
-    // 当前失焦，聚焦到下一个
-    nextFocus (target) {
-      let current = this.findCurrent(target, 'focus-item-wrap') // 找到当前表单类型
+    // 找到当前的元素使其失焦，找到下一个聚焦元素
+    nextFocus (target, isCheckbox) {
+      // 如果是复选框，则找到是否是最后一个
+      let isLast, _current
+      if (isCheckbox) {
+        _current = this.findCurrent(target, 'focus-element')
+        let children = _current.parentNode.children
+        isLast = [].indexOf.call(children, _current) === children.length - 1
+      }
+      let current = (isCheckbox && !isLast) ? _current : this.findCurrent(target, 'focus-item-wrap') // 找到当前表单类型
       let next = current ? current.nextElementSibling : null
       let nextFocus = next ? this.findNextFocus(next) : null // 找到下一表单类型中的聚焦元素
+
+      if (isCheckbox) {
+        this.confirmCurrent(target)
+        isLast && this.confirmFocus(target, nextFocus)
+      } else {
+        this.confirmFocus(target, nextFocus)
+      }
+    },
+    // 当前失焦，聚焦到下一个
+    confirmFocus (target, nextFocus) {
       if (target.getAttribute('id') === 'selectEle') {
         this.$refs.selectEle.blur()
       } else {
@@ -184,8 +201,6 @@ export default {
     // 水平方向移动
     moveHorizontal (target, direct) {
       let isLeft = direct === -1 // 向左
-      // let next = isLeft ? target.previousSibling : target.nextSibling
-      console.log(isLeft, 'isLeft')
       let current = this.findCurrent(target, 'focus-element') // 找到当前表单类型
       console.log(current, 'current')
       let nextFocus = this.findSiblingFocus(current, isLeft) // 找到下一表单类型中的聚焦元素
@@ -193,12 +208,14 @@ export default {
       nextFocus && nextFocus.focus()
     },
     // 垂直方向移动
-    moveVertical () {
-
+    moveVertical (target, direct) {
+      let isDown = direct === -1 // 向下
+      console.log(isDown, 'isDown')
     },
     // 确认当前聚焦的表单的值
-    confirmCurrent () {
-
+    confirmCurrent (target) {
+      console.log(target.value, 'target value')
+      this.form.interest.push(Number(target.value))
     },
     // 绑定键盘事件
     bindEvent (_this) {
@@ -206,16 +223,18 @@ export default {
         let ev = e || window.event
         let keyCode = ev.keyCode
         let target = ev.target
+        console.log(target, 'target')
+        let isCheckbox = target.className.includes('el-checkbox__original')
         switch (keyCode) {
           case 13: // enter回车
-            _this.confirmCurrent() // 确认当前聚焦的值
-            _this.nextFocus(target) // 聚焦下一个
+            // _this.confirmCurrent() // 确认当前聚焦的值
+            _this.nextFocus(target, isCheckbox) // 聚焦下一个
             break
           case 38: // PgUp向上
-            _this.moveVertical() // 垂直方向移动
+            _this.moveVertical(target, 1) // 垂直方向移动
             break
           case 40: // PgDn向下
-            _this.moveVertical() // 垂直方向移动
+            _this.moveVertical(target, -1) // 垂直方向移动
             break
           case 37: // Home向左
             _this.moveHorizontal(target, -1) // 水平方向移动
