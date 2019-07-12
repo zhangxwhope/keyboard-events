@@ -34,13 +34,16 @@
       <el-form-item label="其他信息:" class="focus-item-wrap" data-type="button">
         <el-button :autofocus="buttonFocus"
                    class="focus-element"
-                   :class="{ 'focusing' : buttonFocus }">其他信息填写</el-button>
+                   :class="{ 'focusing' : buttonFocus }"
+                   @click="dialogVisible = true">其他信息填写</el-button>
       </el-form-item>
     </el-form>
+    <other-info-dialog :visible="dialogVisible" @closeDialog="closeDialog"></other-info-dialog>
   </div>
 </template>
 
 <script>
+import OtherInfoDialog from '@/components/TheOtherInfoDialog'
 export default {
   name: 'Home',
   data () {
@@ -118,8 +121,12 @@ export default {
       },
       firstFocus: true, // 第一个聚焦
       buttonFocus: false, // 提交按钮聚焦
+      dialogVisible: false, // 其他信息填写弹框显示标志
       typeDict: ['input', 'raido', 'checkbox', 'select', 'button'] // 表单组件类型
     }
+  },
+  components: {
+    OtherInfoDialog
   },
   created () {
     this.bindEvent(this)
@@ -138,7 +145,6 @@ export default {
       let current = (isCheckbox && !isLast && !hasChecked) ? _current : this.findCurrent(target, 'focus-item-wrap') // 找到当前表单类型
       let next = current ? current.nextElementSibling : null
       let nextFocus = next ? this.findNextFocus(next) : null // 找到下一表单类型中的聚焦元素
-
       if (isCheckbox) {
         this.confirmCurrent(target)
         if (isLast || hasChecked) {
@@ -159,6 +165,10 @@ export default {
         this.$refs.selectEle.focus()
       } else {
         nextFocus && nextFocus.focus()
+      }
+      // 如果当前是button，则弹框
+      if (target.nodeName === 'BUTTON') {
+        this.dialogVisible = true
       }
     },
     // 递归查找当前表单类型
@@ -246,6 +256,10 @@ export default {
             break
         }
       }
+    },
+    // 关闭弹框
+    closeDialog () {
+      this.dialogVisible = false
     },
     // 提交事件
     submit () {
